@@ -28,7 +28,7 @@ exports.handler = function(event, context, callback) {
     var eventSrcKey    =
     decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
 
-    // If not a S3 log, then skip
+    // If not a S3 log, then finish
     if (eventSrcKey.startsWith(srcLogBucketPath) == false){
         console.log("Not S3 Log...");
         return;
