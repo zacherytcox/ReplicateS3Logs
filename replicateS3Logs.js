@@ -34,6 +34,8 @@ exports.handler = function(event, context, callback) {
         return;
     }
 
+    var eventSrcKeyName = path.basename(eventSrcKey);
+
     // Sanity check: validate that source and destination are different buckets.
     if (srcLogBucket == destLogCopyBucket) {
         callback("Source and destination buckets are the same.");
@@ -46,7 +48,7 @@ exports.handler = function(event, context, callback) {
             // Download the image from S3 into a buffer.
             s3.getObject({
                     Bucket: eventSrcBucket,
-                    Key: srcKey
+                    Key: eventSrcKey
                 },
                 next);
             },
@@ -55,41 +57,27 @@ exports.handler = function(event, context, callback) {
         function check(response, next) {
 
 
+            var logTxt = response.Body;
+            var logTxtArray = logTxt.split(" ");
+            var logSrcBucket = logTxtArray[1];
+
             // if we dont want to include source bucket logs
             if (incLogBucketLogs == "false"){
-                if (eventSrcBucket == srcLogBucket){
-                    callback("bucket");
+                if (logSrcBucket == srcLogBucket){
+                    callback("Logging bucket log...");
                     return;
 
                 }
             }
 
+            next(null, response.ContentType, response.Body);
 
-            // gm(response.Body).size(function(err, size) {
-            //     // Infer the scaling factor to avoid stretching the image unnaturally.
-            //     var scalingFactor = Math.min(
-            //         MAX_WIDTH / size.width,
-            //         MAX_HEIGHT / size.height
-            //     );
-            //     var width  = scalingFactor * size.width;
-            //     var height = scalingFactor * size.height;
-
-            //     // Transform the image buffer in memory.
-            //     this.resize(width, height)
-            //         .toBuffer(imageType, function(err, buffer) {
-            //             if (err) {
-            //                 next(err);
-            //             } else {
-            //                 next(null, response.ContentType, buffer);
-            //             }
-            //         });
-            // });
         },
         function upload(contentType, data, next) {
-            // Stream the transformed image to a different S3 bucket.
+            // Send the log to a different S3 bucket.
             s3.putObject({
                     Bucket: destLogCopyBucket,
-                    Key: dstKey,
+                    Key: destPrefixKey + eventSrcKeyName,
                     Body: data,
                     ContentType: contentType
                 },
@@ -98,14 +86,11 @@ exports.handler = function(event, context, callback) {
         ], function (err) {
             if (err) {
                 console.error(
-                    'Unable to resize ' + srcBucket + '/' + srcKey +
-                    ' and upload to ' + dstBucket + '/' + dstKey +
-                    ' due to an error: ' + err
+                    'Unable to copy log ' + eventSrcKey + ' from ' + eventSrcBucket + ' to  ' + destLogCopyBucket + '/' + destPrefixKey
                 );
             } else {
                 console.log(
-                    'Successfully resized ' + srcBucket + '/' + srcKey +
-                    ' and uploaded to ' + dstBucket + '/' + dstKey
+                    'Successfully copied log ' + eventSrcKey + ' from ' + eventSrcBucket + ' to  ' + destLogCopyBucket + '/' + destPrefixKey
                 );
             }
 
