@@ -1,6 +1,9 @@
 module.exports = { 
     variableName: "variableValue",
     sourceLogBucket: "example",
-    destinationBucket: "example2"
+    sourceLogFolderPath: "s3logs/",
+    destinationBucket: "example2",
+    destinationKeyPrefix: "dup-",
+    includeLogBucketLogs: "false"
 
 };
