@@ -1,7 +1,7 @@
 module.exports = { 
-    sourceLogBucket: "example",
-    sourceLogFolderPath: "s3logs/",
-    destinationBucket: "example2",
+    sourceLogBucket: "examplechangeme",
+    sourceLogFolderPath: "changeme/",
+    destinationBucket: "example2changeme",
     destinationKeyPrefix: "dup-",
     includeLogBucketLogs: "false"
 
